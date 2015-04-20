@@ -30,6 +30,8 @@ public class BTConnector {
     public BluetoothSocket bluetoothSocket;
     public String address;
 
+    boolean connected = false;
+
     public BTConnector(String address) {
         this.address = address;
         this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -69,38 +71,17 @@ public class BTConnector {
 
     public boolean connect() {
 
-        boolean van = false;
-
-        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-        // If there are paired devices
-        if (pairedDevices.size() > 0) {
-            // Loop through paired devices
-            for (BluetoothDevice device : pairedDevices) {
-
-               // mArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-                if(device.getAddress().equals(address)){
-                    van = true;
-                }
-            }
-        }
-
-        if(!van)
-        {
-            Log.d("BTconnect","Nincs ilyen");
-            return false;
-        }
-
-        Log.d("BTconnect","Van ilyen");
-
-        boolean connected = false;
+        Log.d("BTconn","Conn start");
+        connected = false;
         BluetoothDevice nxt = this.bluetoothAdapter.getRemoteDevice(this.address);
 
         try {
+            Log.d("BTconn","create socket");
             this.bluetoothSocket = nxt.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
-
+            Log.d("BTconn","connect socket");
             this.bluetoothSocket.connect();
             connected = true;
-
+            Log.d("BTconn","connect end");
         }
         catch (Exception e) {
             connected = false;
@@ -118,18 +99,18 @@ public class BTConnector {
             try {
                 InputStream input = this.bluetoothSocket.getInputStream();
                 message = input.read();
-                Log.d(BTConnector.TAG, "Successfully read message");
+               // Log.d(BTConnector.TAG, "Successfully read message");
 
             }
             catch (Exception e) {
                 message = null;
-                Log.d(BTConnector.TAG, "Couldn't read message");
+               // Log.d(BTConnector.TAG, "Couldn't read message");
 
             }
         }
         else {
             message = null;
-            Log.d(BTConnector.TAG, "Couldn't read message");
+          //  Log.d(BTConnector.TAG, "Couldn't read message");
 
         }
 
@@ -159,20 +140,29 @@ public class BTConnector {
         return  c;
     }
 
-    public void sendMessage(byte[] message) throws IOException {
+    public void sendMessage(byte[] message) {
 
-        OutputStream output = this.bluetoothSocket.getOutputStream();
-        if (output == null) {
-            bluetoothSocket = null;
-            throw new IOException();
+        if(connected) {
+            try {
+                OutputStream output = this.bluetoothSocket.getOutputStream();
+                if (output == null) {
+                    bluetoothSocket = null;
+                    throw new IOException();
 
+                }
+                // send message length
+                int messageLength = message.length;
+                output.write(messageLength);
+                output.write(messageLength >> 8);
+                output.write(message, 0, message.length);
+                output.flush();
+            }
+            catch (Exception e)
+            {
+                connected = false;
+                Log.d("BTThread","Failed to send");
+            }
         }
-        // send message length
-        int messageLength = message.length;
-        output.write(messageLength);
-        output.write(messageLength >> 8);
-        output.write(message, 0, message.length);
-        output.flush();
     }
 
     public void writeMessage(String msg) throws InterruptedException{

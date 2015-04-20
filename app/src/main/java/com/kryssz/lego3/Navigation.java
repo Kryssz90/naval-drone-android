@@ -24,6 +24,14 @@ public class Navigation
         dest = d;
     }
 
+    public void setDestination(double lat, double lon)
+    {
+        Location loc = new Location("gps");
+        loc.setLatitude(lat);
+        loc.setLongitude(lon);
+        dest = loc;
+    }
+
     public Location getDestination()
     {
         return dest;
@@ -51,6 +59,15 @@ public class Navigation
 
 	   Feladata: bejön egy location, betároljuk a lista végébe, a legelső elemeket pedig addig szedjük ki, amig a lista hossza nem lesz 10 alatt.
 	   */
+    }
+
+
+    public void addLocation(double lat, double lon)
+    {
+        Location loc = new Location("gps");
+        loc.setLatitude(lat);
+        loc.setLongitude(lon);
+        addLocation(loc);
     }
 
     public void clearLocations()
@@ -89,39 +106,17 @@ public class Navigation
         double d = a*(1/2d) + b*(1/3d) + c*(1/6d);
         return  d;
 
+    }
 
-
-        //EZT KELL MEGVALÓSITANI
-
-		/*
-				Ennek a függvénynek az kell hogy legyen a feladata, hogy az iránytű mért értéke, a már tárolt koordináták alapján kiszámolja, hogy a hajó valójában milyen irányba néz.
-		*/
-
-
+    public double getDistance()
+    {
+        return getLastLocation().distanceTo(getDestination());
     }
 
 
     public double getBearingToDest()
     {
-        /*Location helyzet= getLastLocation();
-        Location cel = getDestination();
-        double irany = helyzet.bearingTo(cel);
-        if(irany < 0) irany = 360+irany;
-        return irany;*/
-
         return BearingTo(getLastLocation(), getDestination());
-
-
-			/*
-				A függvény feladata hogy a legutóbbi ismert koordináta (getLastLocation), és a célkoordináta alapján megadja hogy milyen irányban van a célkordináta a mostani koordinátához képest. (Pl a mostani koordintához képest a cél 45 fokra van)
-			*/
     }
-
-
-    // 2 legrisebb adatnak nagyobb a súlyzása k változóba rakjuk második k*k
-
-
-
-    //<
 
 }

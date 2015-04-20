@@ -76,11 +76,8 @@ public class Foablak extends ActionBarActivity{
     TextView txDLat;
     TextView txDLon;
 
-
-
     Bearsensor bs;
     GPSTracker tracker = new GPSTracker(this);
-
 
     private Toast reusableToast;
     private Handler btcHandler;
@@ -94,17 +91,24 @@ public class Foablak extends ActionBarActivity{
     int motorLeft;
     private boolean pairing;
 
-
-
-    private boolean allowHTTPCommunication = false;
-    private boolean allowBTCommunication = false;
+    private boolean allowHTTPCommunication = true;
+    private boolean allowBTCommunication = true;
 
 
     long lastDataSent=0;
     long lastDataGet=0;
 
+    int btfok = 0;
+    int btspeed = 0;
+
+    String ki = "";
+
+    HTTPHandler reciever;
+
     double destLat = 0;
     double destLon = 0;
+
+    Navigation nav = new Navigation();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -202,12 +206,8 @@ public class Foablak extends ActionBarActivity{
                     Log.d("Dest","Valami bug");
                     e.printStackTrace();
                 }
-
             }
         });
-
-
-
     }
 
     class locationTask extends TimerTask {
@@ -239,6 +239,13 @@ public class Foablak extends ActionBarActivity{
         s += ":";
         s += l0(c.get(Calendar.SECOND), 2);
         return s;
+    }
+
+    double normalizeAngle(double angle)
+    {
+        while(angle > 360) angle = angle - 360;
+        while(angle < 0) angle = angle + 360;
+        return angle;
     }
 
     final Handler h = new Handler(new Callback() {
@@ -288,23 +295,44 @@ public class Foablak extends ActionBarActivity{
                 }
                 other += " lchk: "+getTime();
                 other = (btThread.getConnected()? "C":"c") + (btThread.isBusy() ? "B" : "b") + (btThread.getConnect() ? "%" : "/");
+                other += ki;
                 txExtra.setText(other);
 
+                if(reciever != null)
+                {
+                    if(reciever.done)
+                    {
+                        String response =  reciever.response;
+                        Log.d("GetDestination", " {"+response+"}");
+                        String[] datas = response.split(";");
 
-                HTTPHandler reciever = new HTTPHandler("http://lego.amk.uni-obuda.hu/legogroup3/php/getdestination.php");
-                if(allowHTTPCommunication && time-lastDataGet>500) {
-                    reciever.send();
+                        try {
+                            destLat = Double.valueOf(datas[0]);
+                            destLon = Double.valueOf(datas[1]);
+                        }
+                        catch(Exception e)
+                        {
+                            Log.d("GetDestination","Hiba a konvertáláskor, ");
+                        }
 
-                    String[] datas = reciever.response.split(";");
+                        txDLat.setText(String.valueOf(destLat));
+                        txDLon.setText(String.valueOf(destLon));
 
-                    destLat = Double.valueOf(datas[0]);
-                    destLon = Double.valueOf(datas[1]);
+                        reciever = null;
 
-                    txDLat.setText(String.valueOf(destLat));
-                    txDLon.setText(String.valueOf(destLon));
+                    }
+                }
+
+                if(allowHTTPCommunication)
+                {
 
 
-                    lastDataGet = System.currentTimeMillis();
+                    if (time - lastDataGet > 250) {
+                        reciever = new HTTPHandler("http://lego.amk.uni-obuda.hu/legogroup3/php/getdestination.php");
+                        reciever.send();
+
+                        lastDataGet = System.currentTimeMillis();
+                    }
                 }
 
             }
@@ -319,32 +347,74 @@ public class Foablak extends ActionBarActivity{
             CheckBox cbBt = (CheckBox) findViewById(R.id.cbBT);
             allowBTCommunication = cbBt.isChecked();
 
+            try {
+
+                btfok = 0;
+                btspeed = 0;
+
+                // Ha lapátfok és sebességadat érkezik
+                if (destLat > 0 && destLat < 2 && destLon > 0 && destLon < 2) {
+                    if (destLat >= 1) {
+                        btfok = (int) Math.round((destLat - 1) * 100);
+                    } else {
+                        btfok = (int) Math.round(-(destLat * 100));
+                    }
+                    btspeed = (int) Math.round((destLon * 1000));
+                }
+                else if (destLat > 2 && destLat < 3 && destLon > 0 && destLon < 2) {
+
+                    int fokbe = (int) Math.round((destLat - 2) * 1000);
+
+                    if (Math.abs(btfok - sensorBear) > 90) {
+                        //ráfordul
+                        btfok = 200 + (int) Math.round(normalizeAngle(fokbe - sensorBear));
+                    } else {
+                        //lapáttal kormányoz
+                        btfok = (int) Math.round(fokbe - sensorBear);
+                    }
+
+                    btspeed = (int) Math.round((destLon * 1000));
+                } else if (destLat > 3 && destLon > 2) {
+                    nav.setDestination(destLat, destLon);
+                    nav.addLocation(lat, lon);
+
+                    double todest = nav.getBearingToDest();
+
+                    if (Math.abs(todest - sensorBear) > 90) {
+                        //ráfordul
+                        btfok = 200 + (int) Math.round(normalizeAngle(todest - sensorBear));
+                    } else {
+                        //lapáttal kormányoz
+                        btfok = (int) Math.round(todest - sensorBear);
+                    }
+
+                    double distance = nav.getDistance();
+                    if (distance > 15) {
+                        btspeed = 100;
+                    } else if (distance > 5) {
+                        btspeed = 50;
+                    } else {
+                        btspeed = 0;
+                    }
+
+                }
+                ki = "{" + btfok + "," + btspeed + "} ";
+            }
+            catch(Exception e)
+            {
+                btspeed = 0;
+                btfok= 0;
+                ki="Nem lehet kiszámolni";
+            }
+
             if(allowBTCommunication) {
                // String msg1 = (sensorBear-90) + ",0";
 
-                int fok = 0;
-                int speed = 0;
-                if(destLat > 0 && destLat<2 && destLon>0 && destLon<2)
-                {
-                    if(destLat >= 1)
-                    {
-                        fok = (int) Math.round((destLat-1)*100);
-                    }
-                    else
-                    {
-                        fok = (int) Math.round(-(destLat*100));
-                    }
 
 
-                    speed = (int) Math.round((destLon*1000));
-                }
-                else
-                {
-                    fok = speed = 0;
-                }
+               btThread.addMessage(""+btfok+","+btspeed+"");
 
 
-                btThread.addMessage(""+fok+","+speed+"");
 
             }
             btThreadT = new Thread(btThread);

@@ -23,7 +23,7 @@ public class BTThread extends Thread
 
 
     String NXTmac = "00:16:53:0A:85:22";
-    NXTCommunicator nxt;
+    NXTCommunicator nxt= new NXTCommunicator(NXTmac);;
 
     public  BTThread()
     {
@@ -48,7 +48,9 @@ public class BTThread extends Thread
         {
             if(!busy)
             {
+                busy = true;
                 connect();
+                busy = false;
             }
         }
 
@@ -101,13 +103,15 @@ public class BTThread extends Thread
 
     public synchronized boolean getConnected()
     {
-        return nxt.connected;
+        return nxt.isConnected();
     }
 
     private void connect()
     {
         busy = true;
+        Log.d("BTthread","Conn started");
         nxt.connect();
+        Log.d("BTthread","Conn end");
         busy = false;
     }
 

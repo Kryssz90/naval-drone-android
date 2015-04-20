@@ -88,19 +88,20 @@ public class NXTCommunicator {
     public  NXTCommunicator(String mac)
     {
         this.mac = mac;
+
     }
 
     public void connect()
     {
-
         connector = new BTConnector(mac);
         connector.setBluetooth(BTConnector.BT_ON);
+        Log.d("NXTconn","Conn started");
         connector.connect();
-
+        Log.d("NXTconn","Conn progstart");
         connected = true;
 
         startProgram("navaltest2.rxe");
-
+        Log.d("NXTconn","Conn end");
     }
 
     public void disconnect()
@@ -118,13 +119,13 @@ public class NXTCommunicator {
             {
                 dec += "["+String.valueOf(t[i])+"],";
             }
-            Log.d("Startpg",dec);
+          //  Log.d("Startpg",dec);
             connector.sendMessage(t);
         }
         catch (Exception e)
         {
             Log.d("Error",e.getMessage());
-            connected = false;
+            //connected = false;
            /* if(e.getMessage().equals("Broken pipe") || e.getMessage().equals("Transport endpoint is not connected"));
             {
                 connect();
@@ -134,6 +135,14 @@ public class NXTCommunicator {
 
     public boolean isConnected()
     {
+        if(connector != null)
+        {
+            if(connector.connected == false)
+            {
+                connected = false;
+
+            }
+        }
         return connected;
     }
 
@@ -147,11 +156,11 @@ public class NXTCommunicator {
 
         try {
             String decoded = new String(t, "UTF-8");
-            Log.d("Convert", decoded);
+           // Log.d("Convert", decoded);
         }
         catch (Exception e)
         {
-            Log.d("Convert","fail");
+          //  Log.d("Convert","fail");
         }
 
         String dec = "";
@@ -160,19 +169,19 @@ public class NXTCommunicator {
             dec += "["+String.valueOf(t[i])+"],";
         }
 
-        Log.d("Array",dec);
+        //Log.d("Array",dec);
 
         try {
             connector.sendMessage(t);
         }
         catch (Exception e)
         {
-            Log.d("Error",e.getMessage());
+            Log.d("BT Error",e.getMessage());
            /* if(e.getMessage().equals("Broken pipe") || e.getMessage().equals("Transport endpoint is not connected"));
             {
                 connect();
             }*/
-            connected = false;
+            //connected = false;
         }
     }
 
