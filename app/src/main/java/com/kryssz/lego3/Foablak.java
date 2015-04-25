@@ -27,7 +27,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -107,6 +111,8 @@ public class Foablak extends ActionBarActivity{
 
     double destLat = 0;
     double destLon = 0;
+
+    int n = 0;
 
     Navigation nav = new Navigation();
 
@@ -365,13 +371,15 @@ public class Foablak extends ActionBarActivity{
 
                     int fokbe = (int) Math.round((destLat - 2) * 1000);
 
-                    if (Math.abs(btfok - sensorBear) > 90) {
+                   /* if (Math.abs(btfok - sensorBear) > 90) {
                         //ráfordul
                         btfok = 200 + (int) Math.round(normalizeAngle(fokbe - sensorBear));
                     } else {
                         //lapáttal kormányoz
                         btfok = (int) Math.round(fokbe - sensorBear);
-                    }
+                    }*/
+
+                    btfok = (int) (Math.round((fokbe - sensorBear)/4));
 
                     btspeed = (int) Math.round((destLon * 1000));
                 } else if (destLat > 3 && destLon > 2) {
@@ -379,14 +387,16 @@ public class Foablak extends ActionBarActivity{
                     nav.addLocation(lat, lon);
 
                     double todest = nav.getBearingToDest();
-
+/*
                     if (Math.abs(todest - sensorBear) > 90) {
                         //ráfordul
                         btfok = 200 + (int) Math.round(normalizeAngle(todest - sensorBear));
                     } else {
                         //lapáttal kormányoz
                         btfok = (int) Math.round(todest - sensorBear);
-                    }
+                    }*/
+
+                    btfok = (int)( Math.round((todest - sensorBear)/4));
 
                     double distance = nav.getDistance();
                     if (distance > 15) {
@@ -397,8 +407,12 @@ public class Foablak extends ActionBarActivity{
                         btspeed = 0;
                     }
 
+                    double sfact = 1-(10+Math.abs(btfok))/100d;
+                    btspeed = (int) Math.round(btspeed*sfact);
+
                 }
                 ki = "{" + btfok + "," + btspeed + "} ";
+              //  sendCommand();
             }
             catch(Exception e)
             {
@@ -423,6 +437,87 @@ public class Foablak extends ActionBarActivity{
             return false;
         }
     });
+
+    private void sendCommand()
+    {
+        if(n==0) {
+            try {
+
+                URL obj = new URL("http://lego.amk.uni-obuda.hu/legogroup3/sandbox/php/test_setcom.php?deg=" + btfok + "&speed=" + btspeed);
+                if (obj == null) Log.d("Sender", "obj null");
+                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+                if (con == null) Log.d("Sender", "con null");
+                con.setRequestMethod("GET");
+
+                con.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+                int responseCode = con.getResponseCode();
+                //  System.out.println("\nSending 'GET' request to URL : " + http.url);
+                //  System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                //print result
+                System.out.println(response.toString());
+
+            } catch (Exception e) {
+                Log.d("GetPosTest", e.getMessage());
+            }
+        }
+    }
+
+    private void getLocation2()
+    {
+
+        if(n==0) {
+            try {
+
+                URL obj = new URL("http://lego.amk.uni-obuda.hu/legogroup3/sandbox/php/test_getpos.php");
+                if (obj == null) Log.d("Sender", "obj null");
+                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+                if (con == null) Log.d("Sender", "con null");
+                con.setRequestMethod("GET");
+
+                con.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+                int responseCode = con.getResponseCode();
+                //  System.out.println("\nSending 'GET' request to URL : " + http.url);
+                //  System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                //print result
+                System.out.println(response.toString());
+                String[] data = response.toString().split(";");
+
+
+                lat = Double.valueOf(data[0]);
+                lon = Double.valueOf(data[1]);
+                sensorBear = Float.valueOf(data[2]);
+
+            } catch (Exception e) {
+                Log.d("GetPosTest", e.getMessage());
+            }
+        }
+        n++;
+        if(n==18) n=0;
+    }
 
     private void getLocation() {
 
