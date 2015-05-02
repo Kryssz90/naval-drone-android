@@ -239,8 +239,15 @@
                 style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="New Button"
-                android:id="@+id/btDebug" />
+                android:text="Settings"
+                android:id="@+id/btnSettings" />
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Get Battery"
+                android:id="@+id/btnGetBattery" />
         </LinearLayout>
 
     </LinearLayout>

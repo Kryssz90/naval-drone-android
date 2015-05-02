@@ -120,10 +120,12 @@ class HTTPSender extends AsyncTask<HTTPHandler,Integer,String>
                 response.append(inputLine);
             }
             in.close();
+            con.disconnect();
 
             //print result
             System.out.println(response.toString());
             http.response = response.toString();
+
             return http.response;
         }
         catch (Exception e)

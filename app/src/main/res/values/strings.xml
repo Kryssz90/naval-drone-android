@@ -21,6 +21,7 @@
     <string name="bt_error_dialog_title">Error</string>
     <string name="bt_error_dialog_message">Error happend</string>
     <string name="connecting_please_wait">Connecting...</string>
+    <string name="title_activity_settings">Settings</string>
 
 
 </resources>

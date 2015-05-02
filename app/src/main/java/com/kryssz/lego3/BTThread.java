@@ -21,9 +21,11 @@ public class BTThread extends Thread
     boolean busy;
     List<Bundle> messages = new ArrayList<Bundle>();
 
+    long lastBatteryCheck = 0;
+
 
     String NXTmac = "00:16:53:0A:85:22";
-    NXTCommunicator nxt= new NXTCommunicator(NXTmac);;
+    NXTCommunicator nxt= new NXTCommunicator(NXTmac);
 
     public  BTThread()
     {
@@ -35,7 +37,7 @@ public class BTThread extends Thread
     {
 
 
-       //t.scheduleAtFixedRate(new btTask(), 0, 100);
+        //t.scheduleAtFixedRate(new btTask(), 0, 100);
     }
 
     @Override
@@ -44,6 +46,15 @@ public class BTThread extends Thread
         //h.sendEmptyMessage(0);
         //t.scheduleAtFixedRate(new btTask(), 0, 100);
         Log.d("BTThread","Msgloop");
+        if(getConnected() && nxt.requested) {
+            nxt.readMessage();
+        }
+
+        if(getConnected() && System.currentTimeMillis()-lastBatteryCheck > 1000)
+        {
+            getBattery();
+            lastBatteryCheck = System.currentTimeMillis();
+        }
         if(conn && !getConnected())
         {
             if(!busy)
@@ -91,6 +102,11 @@ public class BTThread extends Thread
         messages.add(b);
     }
 
+    public double getVoltage()
+    {
+        return nxt.voltage;
+    }
+
     public synchronized boolean getConnect()
     {
         return conn;
@@ -104,6 +120,12 @@ public class BTThread extends Thread
     public synchronized boolean getConnected()
     {
         return nxt.isConnected();
+    }
+
+
+    public void getBattery()
+    {
+        nxt.getBattery();
     }
 
     private void connect()
@@ -130,7 +152,7 @@ public class BTThread extends Thread
 
 
         }
-    };
+    }
 
     final Handler h = new Handler(new Handler.Callback() {
 
@@ -147,6 +169,11 @@ public class BTThread extends Thread
                     }
                 }
 
+                if(getConnect())
+                {
+                    getBattery();
+                }
+
                 if( messages.size()>0 && getConnected())
                 {
                     if(!busy)
@@ -158,6 +185,8 @@ public class BTThread extends Thread
                         }
                         sendMessage(messages.get(0).getString("message"));
                         messages.remove(0);
+
+
                     }
                 }
 
@@ -173,6 +202,6 @@ public class BTThread extends Thread
         }
 
 
-        });
+    });
 
 }

@@ -92,25 +92,43 @@ public class BTConnector {
 
     }
 
-    public Integer readMessage() {
-        Integer message;
+    public byte[] readMessage() {
+        byte[] message;
 
         if(this.bluetoothSocket!= null) {
             try {
                 InputStream input = this.bluetoothSocket.getInputStream();
-                message = input.read();
-               // Log.d(BTConnector.TAG, "Successfully read message");
 
+                if(input.available() > 2)
+                {
+                    int length = input.read() + input.read()*256;
+                    message = new byte[length];
+                    for(int i = 0; i<length; i++) {
+                        message[i] = (byte) input.read();
+                    }
+                    String dec="";
+                    for(int i = 0;i<message.length;i++)
+                    {
+                        dec += "["+String.valueOf(message[i])+"],";
+                    }
+                    Log.d("Btread",dec);
+                }
+                else
+                {
+                    message = new byte[0];
+                }
+                 Log.d(BTConnector.TAG, "Successfully read message: "+message.length);
+                 return  message;
             }
             catch (Exception e) {
                 message = null;
-               // Log.d(BTConnector.TAG, "Couldn't read message");
-
+                 Log.d(BTConnector.TAG, "Couldn't read message");
+                 return new byte[0];
             }
         }
         else {
             message = null;
-          //  Log.d(BTConnector.TAG, "Couldn't read message");
+             Log.d(BTConnector.TAG, "Couldn't read message");
 
         }
 
@@ -175,7 +193,7 @@ public class BTConnector {
 
                 BufferedWriter out = new BufferedWriter(new OutputStreamWriter(connSock.getOutputStream()));
                 out.write(msg);
-               // out.flush();
+                // out.flush();
 
                 Thread.sleep(30);
 
