@@ -104,6 +104,8 @@ public class Foablak extends ActionBarActivity{
     double turndivide = 4;
     double voltageoff = 7;
     double voltageon = 8;
+    double turncorrection = 0;
+    int minturn = 20;
 
 
     long lastDataSent=0;
@@ -113,7 +115,7 @@ public class Foablak extends ActionBarActivity{
     int btfok = 0;
     int btspeed = 0;
 
-    String ki = "";
+    //String ki = "";
 
     HTTPHandler reciever;
 
@@ -198,7 +200,8 @@ public class Foablak extends ActionBarActivity{
                 s.putExtra("turndivide",turndivide);
                 s.putExtra("turnonvolt",voltageon);
                 s.putExtra("turnoffvolt",voltageoff);
-
+                s.putExtra("turncorrection",turncorrection);
+                s.putExtra("miminumturnspeed",minturn);
                 startActivityForResult(s,101);
 
             }
@@ -217,7 +220,8 @@ public class Foablak extends ActionBarActivity{
             turndivide = data.getExtras().getDouble("turndivide");
             voltageon= data.getExtras().getDouble("turnonvolt");
             voltageoff = data.getExtras().getDouble("turnoffvolt");
-
+            turncorrection = data.getExtras().getDouble("turncorrection");
+            minturn = data.getExtras().getInt("miminumturnspeed");
         }
 
     }
@@ -320,7 +324,7 @@ public class Foablak extends ActionBarActivity{
                 }
                 other += " lchk: "+getTime();
                 other = (btThread.getConnected()? "C":"c") + (allowMotorMovement ? "M" : "m") + (btThread.getConnect() ? "%" : "/");
-                other += ki;
+                other += "{"+btfok+", "+btspeed+"}";
                 other += " "+btThread.getVoltage();
                 txExtra.setText(other);
 
@@ -426,35 +430,39 @@ public class Foablak extends ActionBarActivity{
                     if(btfok < -90) btfok = -90;
 
                     double distance = nav.getDistance();
-                    if (distance > 15) {
-                        btspeed = 127;
-                    } else if (distance > 5) {
-                        btspeed = 60;
-                    } else {
-                        btspeed = 0;
-                    }
 
-                    double sfact = 1-(10+Math.abs(btfok))/100d;
-                    double speed1 =btspeed*sfact;
+
+                    double speed1 = ((minturn - 120d)/90d)*Math.abs(btfok)+120;
                     if(speed1>127) speed1 = 127;
                     if(speed1<0) speed1=0;
+
+                    if (distance > 15) {
+
+                    } else if (distance > 5) {
+                        speed1 = speed1 / 2d;
+                    } else {
+                        speed1 = 0;
+                    }
+
                     btspeed = (int) Math.round(speed1);
 
                 }
-                ki = "{" + btfok + "," + btspeed + "} ";
+               // ki = "{" + btfok + "," + btspeed + "} ";
                //sendCommand();
             }
             catch(Exception e)
             {
                 btspeed = 0;
                 btfok= 0;
-                ki="Nem lehet kiszámolni";
+                //ki="Nem lehet kiszámolni";
             }
 
             if(!allowMotorMovement)
             {
                 btspeed = 0;
             }
+
+            btfok += turncorrection;
 
             if(btThread.getVoltage() <= voltageoff) allowMotorMovement = false;
             if(btThread.getVoltage() >= voltageon) allowMotorMovement = true;

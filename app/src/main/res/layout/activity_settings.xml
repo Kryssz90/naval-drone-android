@@ -68,5 +68,33 @@
             android:inputType="number|numberDecimal|numberSigned"
             android:ems="10"
             android:id="@+id/etTurnOnVoltage" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="Turn Correction"
+            android:id="@+id/tvTurnCorrection" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number|numberDecimal|numberSigned"
+            android:ems="10"
+            android:id="@+id/etTurnCorrection" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="Minimum Turning Speed"
+            android:id="@+id/tvMts" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number|numberDecimal|numberSigned"
+            android:ems="10"
+            android:id="@+id/etMts" />
     </LinearLayout>
 </RelativeLayout>

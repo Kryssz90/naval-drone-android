@@ -30,6 +30,14 @@ public class Settings extends ActionBarActivity {
         double turnoffvolt = i.getDoubleExtra("turnoffvolt",7);
         EditText teturnoff = (EditText) findViewById(R.id.etTurnOffVoltage);
         teturnoff.setText(String.valueOf(turnoffvolt));
+
+        double turncorrection = i.getDoubleExtra("turncorrection",0);
+        EditText teTurnCorrection = (EditText) findViewById(R.id.etTurnCorrection);
+        teTurnCorrection.setText(String.valueOf(turncorrection));
+
+        int mts = i.getIntExtra("miminumturnspeed",20);
+        EditText teMts = (EditText) findViewById(R.id.etMts);
+        teMts.setText(String.valueOf(mts));
     }
 
 
@@ -50,9 +58,13 @@ public class Settings extends ActionBarActivity {
         EditText te = (EditText) findViewById(R.id.etTurnDivide);
         EditText teturnon = (EditText) findViewById(R.id.etTurnOnVoltage);
         EditText teturnoff = (EditText) findViewById(R.id.etTurnOffVoltage);
+        EditText teturncorrection = (EditText) findViewById(R.id.etTurnCorrection);
+        EditText temts = (EditText) findViewById(R.id.etMts);
         i.putExtra("turndivide", Double.valueOf(te.getText().toString()) );
         i.putExtra("turnonvolt", Double.valueOf(teturnon.getText().toString()) );
         i.putExtra("turnoffvolt", Double.valueOf(teturnoff.getText().toString()) );
+        i.putExtra("turncorrection", Double.valueOf(teturncorrection.getText().toString()) );
+        i.putExtra("miminumturnspeed", Integer.valueOf(temts.getText().toString()) );
         setResult(101,i);
 
         Toast.makeText(this, "Saved", Toast.LENGTH_LONG).show();
